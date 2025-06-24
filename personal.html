@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+    <style>
+        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
+        .container { max-width: 500px; margin: 60px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        img.avatar { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; }
+        h2 { color: #4caf50; margin-bottom: 30px; }
+        .info-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .info-label { font-size: 17px; color: #333; }
+        .info-value { font-size: 17px; color: #555; margin-right: 10px; }
+        .edit-btn, .show-btn, .order-btn, .address-btn { 
+            background: #2196f3; color: #fff; border: none; border-radius: 4px; 
+            padding: 4px 12px; font-size: 15px; cursor: pointer; margin-left: 6px;
+        }
+        .edit-btn:hover, .show-btn:hover, .order-btn:hover, .address-btn:hover { background: #1976d2; }
+        .input-inline { width: 160px; padding: 4px 8px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc; }
+        .mask { letter-spacing: 4px; }
+        .order-list { margin-top: 18px; background: #f1f1f1; border-radius: 6px; padding: 16px; }
+        .order-item { margin-bottom: 8px; color: #333; }
+        .back-link { display: block; margin-top: 30px; color: #2196f3; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img class="avatar" src="https://img.icons8.com/color/96/000000/user-male-circle.png" alt="头像">
+        <h2>个人信息</h2>
+        <div class="info-row">
+            <span class="info-label">昵称</span>
+            <span>
+                <span class="info-value" id="nickname">小明</span>
+                <button class="edit-btn" onclick="editField('nickname')">修改</button>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">联系方式</span>
+            <span>
+                <span class="info-value" id="contact">138****8888</span>
+                <button class="edit-btn" onclick="editField('contact')">修改</button>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">收货地址</span>
+            <span>
+                <span class="info-value" id="address">北京市朝阳区XX路88号</span>
+                <button class="address-btn" onclick="editField('address')">✎</button>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">订单记录</span>
+            <span>
+                <button class="order-btn" onclick="toggleOrders()">查看</button>
+            </span>
+        </div>
+        <div id="orderList" class="order-list" style="display:none;">
+            <div class="order-item">2024-06-01  苹果x2  ￥10.00</div>
+            <div class="order-item">2024-06-03  牛奶x1  ￥5.50</div>
+            <div class="order-item">2024-06-05  啤酒x6  ￥36.00</div>
+            <div class="order-item">2024-06-10  洗发水x1  ￥22.00</div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">会员卡余额</span>
+            <span>
+                <span class="info-value mask" id="balanceMask">****</span>
+                <button class="show-btn" onclick="showBalance()">点击查看</button>
+            </span>
+        </div>
+        <a class="back-link" href="index.html">返回首页</a>
+    </div>
+    <script>
+        // 临时数据
+        let userData = {
+            nickname: "小明",
+            contact: "138****8888",
+            address: "北京市朝阳区XX路88号",
+            balance: "256.80"
+        };
+
+        // 编辑字段
+        function editField(field) {
+            const valueSpan = document.getElementById(field);
+            const oldValue = valueSpan.innerText;
+            valueSpan.innerHTML = `<input class="input-inline" id="input-${field}" value="${oldValue}"> <button class="edit-btn" onclick="saveField('${field}')">保存</button>`;
+            document.getElementById(`input-${field}`).focus();
+        }
+        function saveField(field) {
+            const input = document.getElementById(`input-${field}`);
+            let newValue = input.value.trim();
+            if (!newValue) {
+                alert("内容不能为空！");
+                return;
+            }
+            userData[field] = newValue;
+            document.getElementById(field).innerText = newValue;
+        }
+
+        // 订单记录显示/隐藏
+        function toggleOrders() {
+            const orderList = document.getElementById('orderList');
+            orderList.style.display = orderList.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 余额显示两秒
+        function showBalance() {
+            const mask = document.getElementById('balanceMask');
+            mask.innerText = userData.balance + " 元";
+            setTimeout(() => {
+                mask.innerText = "****";
+            }, 2000);
+        }
+
+        function showAdminLogin() {
+            document.getElementById('adminLoginModal').style.display = 'flex';
+            document.getElementById('adminLoginMsg').innerText = '';
+            document.getElementById('adminPwd').value = '';
+        }
+        function hideAdminLogin() {
+            document.getElementById('adminLoginModal').style.display = 'none';
+        }
+        function checkAdminPwd() {
+            const pwd = document.getElementById('adminPwd').value;
+            if (pwd === 'admin123') { // 你可以自定义密码
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('adminLoginMsg').innerText = '密码错误！';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <style>
+        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        h2 { color: #4caf50; margin-bottom: 30px; }
+        .user-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .user-table th, .user-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .user-table th { background: #f1f1f1; }
+        .btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 4px 12px; font-size: 15px; cursor: pointer; margin: 0 4px;}
+        .btn:hover { background: #1976d2; }
+        .btn-danger { background: #e57373; }
+        .btn-danger:hover { background: #c62828; }
+        .add-btn { background: #4caf50; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; cursor: pointer; margin-bottom: 20px;}
+        .add-btn:hover { background: #388e3c; }
+        .input-edit, .select-edit { width: 90%; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
+        .action-btns { display: flex; justify-content: center; gap: 8px; }
+        .success { color: #4caf50; }
+        .error { color: #e91e63; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>用户管理</h2>
+        <button class="add-btn" onclick="addUserRow()">添加用户</button>
+        <table class="user-table" id="userTable">
+            <thead>
+                <tr>
+                    <th>用户ID</th>
+                    <th>昵称</th>
+                    <th>联系方式</th>
+                    <th>收货地址</th>
+                    <th>性别</th>
+                    <th>会员卡余额</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 用户行 -->
+            </tbody>
+        </table>
+        <div id="msg"></div>
+    </div>
+    <script>
+        // 用localStorage保存用户数据
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('users') || '[]');
+        }
+        function setUsers(users) {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        let editingId = null; // 当前正在编辑的用户ID
+        let addingNew = false; // 是否正在添加新用户
+
+        function renderTable() {
+            const users = getUsers();
+            const tbody = document.getElementById('userTable').querySelector('tbody');
+            if (users.length === 0 && !addingNew) {
+                tbody.innerHTML = '<tr><td colspan="7">暂无用户</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(user => {
+                if (editingId === user.id) {
+                    // 编辑状态
+                    return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td><input class="input-edit" id="edit-nickname" value="${user.nickname}"></td>
+                        <td><input class="input-edit" id="edit-contact" value="${user.contact}"></td>
+                        <td><input class="input-edit" id="edit-address" value="${user.address}"></td>
+                        <td>
+                            <select class="select-edit" id="edit-gender">
+                                <option value="男" ${user.gender === '男' ? 'selected' : ''}>男</option>
+                                <option value="女" ${user.gender === '女' ? 'selected' : ''}>女</option>
+                                <option value="保密" ${user.gender === '保密' ? 'selected' : ''}>保密</option>
+                            </select>
+                        </td>
+                        <td>￥${parseFloat(user.balance).toFixed(2)}</td>
+                        <td class="action-btns">
+                            <button class="btn" onclick="saveEdit('${user.id}')">保存</button>
+                            <button class="btn btn-danger" onclick="cancelEdit()">取消</button>
+                        </td>
+                    </tr>
+                    `;
+                } else {
+                    // 普通显示状态
+                    return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.nickname}</td>
+                        <td>${user.contact}</td>
+                        <td>${user.address}</td>
+                        <td>${user.gender || '男'}</td>
+                        <td>￥${parseFloat(user.balance).toFixed(2)}</td>
+                        <td class="action-btns">
+                            <button class="btn" onclick="editUser('${user.id}')">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteUser('${user.id}')">删除</button>
+                        </td>
+                    </tr>
+                    `;
+                }
+            }).join('') + (addingNew ? newUserRow() : '');
+        }
+
+        function newUserRow() {
+            return `
+            <tr>
+                <td>自动生成</td>
+                <td><input class="input-edit" id="new-nickname" placeholder="昵称"></td>
+                <td><input class="input-edit" id="new-contact" placeholder="联系方式"></td>
+                <td><input class="input-edit" id="new-address" placeholder="收货地址"></td>
+                <td>
+                    <select class="select-edit" id="new-gender">
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="保密">保密</option>
+                    </select>
+                </td>
+                <td><input class="input-edit" id="new-balance" type="number" placeholder="会员卡余额"></td>
+                <td class="action-btns">
+                    <button class="btn" onclick="saveNewUser()">保存</button>
+                    <button class="btn btn-danger" onclick="cancelAdd()">取消</button>
+                </td>
+            </tr>
+            `;
+        }
+
+        function addUserRow() {
+            if (addingNew) return;
+            addingNew = true;
+            renderTable();
+        }
+
+        function saveNewUser() {
+            const nickname = document.getElementById('new-nickname').value.trim();
+            const contact = document.getElementById('new-contact').value.trim();
+            const address = document.getElementById('new-address').value.trim();
+            const gender = document.getElementById('new-gender').value;
+            const balance = document.getElementById('new-balance').value.trim();
+            const msg = document.getElementById('msg');
+            if (!nickname || !contact || !address || !balance) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            let users = getUsers();
+            const id = 'U' + Date.now();
+            users.push({id, nickname, contact, address, balance, gender});
+            setUsers(users);
+            addingNew = false;
+            msg.innerHTML = '<span class="success">添加成功！</span>';
+            renderTable();
+        }
+
+        function cancelAdd() {
+            addingNew = false;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function editUser(id) {
+            if (addingNew) return;
+            editingId = id;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function saveEdit(id) {
+            const nickname = document.getElementById('edit-nickname').value.trim();
+            const contact = document.getElementById('edit-contact').value.trim();
+            const address = document.getElementById('edit-address').value.trim();
+            const gender = document.getElementById('edit-gender').value;
+            const msg = document.getElementById('msg');
+            if (!nickname || !contact || !address) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            let users = getUsers();
+            users = users.map(u => u.id === id ? {...u, nickname, contact, address, gender} : u);
+            setUsers(users);
+            editingId = null;
+            msg.innerHTML = '<span class="success">修改成功！</span>';
+            renderTable();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function deleteUser(id) {
+            if (!confirm('确定要删除该用户吗？')) return;
+            let users = getUsers();
+            users = users.filter(u => u.id !== id);
+            setUsers(users);
+            document.getElementById('msg').innerHTML = '<span class="success">删除成功！</span>';
+            renderTable();
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>

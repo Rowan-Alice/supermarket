@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>进货登记</title>
+    <style>
+        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        h2 { color: #4caf50; margin-bottom: 30px; }
+        .form-row { margin-bottom: 18px; }
+        .form-row input { padding: 6px 10px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc; margin-right: 10px;}
+        .btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; cursor: pointer; }
+        .btn:hover { background: #1976d2; }
+        .btn-danger { background: #e57373; }
+        .btn-danger:hover { background: #c62828; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        .table th, .table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .table th { background: #f1f1f1; }
+        .success { color: #4caf50; }
+        .error { color: #e91e63; }
+        .edit-input { width: 90%; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
+        .action-btns { display: flex; justify-content: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>进货登记</h2>
+        <div class="form-row">
+            <input id="pid" placeholder="商品ID/名称">
+            <input id="amount" type="number" min="1" placeholder="进货量">
+            <input id="price" type="number" min="0" step="0.01" placeholder="进价">
+            <input id="supplier" placeholder="批发商家">
+            <input id="date" type="date">
+            <button class="btn" onclick="addPurchase()">添加</button>
+        </div>
+        <div id="msg"></div>
+        <table class="table" id="purchaseTable">
+            <thead>
+                <tr>
+                    <th>商品ID/名称</th>
+                    <th>进货量</th>
+                    <th>进价</th>
+                    <th>批发商家</th>
+                    <th>更新日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 进货记录 -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // 用localStorage保存进货记录和库存
+        function getPurchases() {
+            return JSON.parse(localStorage.getItem('purchases') || '[]');
+        }
+        function setPurchases(arr) {
+            localStorage.setItem('purchases', JSON.stringify(arr));
+        }
+        function getStock() {
+            return JSON.parse(localStorage.getItem('stock') || '[]');
+        }
+        function setStock(arr) {
+            localStorage.setItem('stock', JSON.stringify(arr));
+        }
+
+        let editingIndex = null;
+
+        function addPurchase() {
+            const pid = document.getElementById('pid').value.trim();
+            const amount = parseInt(document.getElementById('amount').value, 10);
+            const price = parseFloat(document.getElementById('price').value);
+            const supplier = document.getElementById('supplier').value.trim();
+            const date = document.getElementById('date').value;
+            const msg = document.getElementById('msg');
+            if (!pid || !amount || !price || !supplier || !date) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            // 添加进货记录
+            let purchases = getPurchases();
+            purchases.push({pid, amount, price, supplier, date});
+            setPurchases(purchases);
+
+            // 同步到库存
+            let stock = getStock();
+            let item = stock.find(item => item.pid === pid);
+            if (item) {
+                item.amount += amount;
+                item.price = price;
+                item.supplier = supplier;
+                item.date = date;
+            } else {
+                stock.push({pid, amount, price, supplier, date});
+            }
+            setStock(stock);
+
+            msg.innerHTML = '<span class="success">添加成功！</span>';
+            clearForm();
+            renderTable();
+        }
+
+        function clearForm() {
+            document.getElementById('pid').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('supplier').value = '';
+            document.getElementById('date').value = '';
+        }
+
+        function deletePurchase(index) {
+            if (!confirm('确定要删除该条进货记录吗？')) return;
+            let purchases = getPurchases();
+            purchases.splice(index, 1);
+            setPurchases(purchases);
+            renderTable();
+        }
+
+        function editPurchase(index) {
+            editingIndex = index;
+            renderTable();
+        }
+
+        function saveEdit(index) {
+            const pid = document.getElementById('edit-pid').value.trim();
+            const amount = parseInt(document.getElementById('edit-amount').value, 10);
+            const price = parseFloat(document.getElementById('edit-price').value);
+            const supplier = document.getElementById('edit-supplier').value.trim();
+            const date = document.getElementById('edit-date').value;
+            const msg = document.getElementById('msg');
+            if (!pid || !amount || !price || !supplier || !date) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            let purchases = getPurchases();
+            purchases[index] = {pid, amount, price, supplier, date};
+            setPurchases(purchases);
+
+            // 同步到库存（只更新最后一次编辑的内容）
+            let stock = getStock();
+            let item = stock.find(item => item.pid === pid);
+            if (item) {
+                item.amount = amount;
+                item.price = price;
+                item.supplier = supplier;
+                item.date = date;
+            } else {
+                stock.push({pid, amount, price, supplier, date});
+            }
+            setStock(stock);
+
+            editingIndex = null;
+            msg.innerHTML = '<span class="success">修改成功！</span>';
+            renderTable();
+        }
+
+        function cancelEdit() {
+            editingIndex = null;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function renderTable() {
+            const purchases = getPurchases();
+            const tbody = document.getElementById('purchaseTable').querySelector('tbody');
+            if (purchases.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">暂无进货记录</td></tr>';
+                return;
+            }
+            tbody.innerHTML = purchases.map((item, idx) => {
+                if (editingIndex === idx) {
+                    return `
+                        <tr>
+                            <td><input class="edit-input" id="edit-pid" value="${item.pid}"></td>
+                            <td><input class="edit-input" id="edit-amount" type="number" value="${item.amount}"></td>
+                            <td><input class="edit-input" id="edit-price" type="number" value="${item.price}"></td>
+                            <td><input class="edit-input" id="edit-supplier" value="${item.supplier}"></td>
+                            <td><input class="edit-input" id="edit-date" type="date" value="${item.date}"></td>
+                            <td class="action-btns">
+                                <button class="btn" onclick="saveEdit(${idx})">保存</button>
+                                <button class="btn btn-danger" onclick="cancelEdit()">取消</button>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr>
+                            <td>${item.pid}</td>
+                            <td>${item.amount}</td>
+                            <td>￥${parseFloat(item.price).toFixed(2)}</td>
+                            <td>${item.supplier}</td>
+                            <td>${item.date}</td>
+                            <td class="action-btns">
+                                <button class="btn" onclick="editPurchase(${idx})">编辑</button>
+                                <button class="btn btn-danger" onclick="deletePurchase(${idx})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }).join('');
+        }
+        renderTable();
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>供货商管理</title>
+    <style>
+        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        h2 { color: #4caf50; margin-bottom: 30px; }
+        .supplier-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .supplier-table th, .supplier-table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .supplier-table th { background: #f1f1f1; }
+        .btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 4px 12px; font-size: 15px; cursor: pointer; margin: 0 4px;}
+        .btn:hover { background: #1976d2; }
+        .btn-danger { background: #e57373; }
+        .btn-danger:hover { background: #c62828; }
+        .add-btn { background: #4caf50; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; cursor: pointer; margin-bottom: 20px;}
+        .add-btn:hover { background: #388e3c; }
+        .edit-input { width: 90%; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
+        .action-btns { display: flex; justify-content: center; gap: 8px; }
+        .success { color: #4caf50; }
+        .error { color: #e91e63; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>供货商管理</h2>
+        <button class="add-btn" onclick="addSupplierRow()">添加供货商</button>
+        <table class="supplier-table" id="supplierTable">
+            <thead>
+                <tr>
+                    <th>商品ID</th>
+                    <th>商品名称</th>
+                    <th>供货商</th>
+                    <th>供货商地址</th>
+                    <th>供货商联系方式</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 供货商行 -->
+            </tbody>
+        </table>
+        <div id="msg"></div>
+    </div>
+    <script>
+        function getSuppliers() {
+            return JSON.parse(localStorage.getItem('suppliers') || '[]');
+        }
+        function setSuppliers(arr) {
+            localStorage.setItem('suppliers', JSON.stringify(arr));
+        }
+
+        let editingIndex = null;
+        let addingNew = false;
+
+        function renderTable() {
+            const suppliers = getSuppliers();
+            const tbody = document.getElementById('supplierTable').querySelector('tbody');
+            if (suppliers.length === 0 && !addingNew) {
+                tbody.innerHTML = '<tr><td colspan="6">暂无供货商信息</td></tr>';
+                return;
+            }
+            tbody.innerHTML = suppliers.map((item, idx) => {
+                if (editingIndex === idx) {
+                    return `
+                    <tr>
+                        <td><input class="edit-input" id="edit-gid" value="${item.gid}"></td>
+                        <td><input class="edit-input" id="edit-gname" value="${item.gname}"></td>
+                        <td><input class="edit-input" id="edit-supplier" value="${item.supplier}"></td>
+                        <td><input class="edit-input" id="edit-address" value="${item.address}"></td>
+                        <td><input class="edit-input" id="edit-contact" value="${item.contact}"></td>
+                        <td class="action-btns">
+                            <button class="btn" onclick="saveEdit(${idx})">保存</button>
+                            <button class="btn btn-danger" onclick="cancelEdit()">取消</button>
+                        </td>
+                    </tr>
+                    `;
+                } else {
+                    return `
+                    <tr>
+                        <td>${item.gid}</td>
+                        <td>${item.gname}</td>
+                        <td>${item.supplier}</td>
+                        <td>${item.address}</td>
+                        <td>${item.contact}</td>
+                        <td class="action-btns">
+                            <button class="btn" onclick="editSupplier(${idx})">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteSupplier(${idx})">删除</button>
+                        </td>
+                    </tr>
+                    `;
+                }
+            }).join('') + (addingNew ? newSupplierRow() : '');
+        }
+
+        function newSupplierRow() {
+            return `
+            <tr>
+                <td><input class="edit-input" id="new-gid" placeholder="商品ID"></td>
+                <td><input class="edit-input" id="new-gname" placeholder="商品名称"></td>
+                <td><input class="edit-input" id="new-supplier" placeholder="供货商"></td>
+                <td><input class="edit-input" id="new-address" placeholder="供货商地址"></td>
+                <td><input class="edit-input" id="new-contact" placeholder="供货商联系方式"></td>
+                <td class="action-btns">
+                    <button class="btn" onclick="saveNewSupplier()">保存</button>
+                    <button class="btn btn-danger" onclick="cancelAdd()">取消</button>
+                </td>
+            </tr>
+            `;
+        }
+
+        function addSupplierRow() {
+            if (addingNew) return;
+            addingNew = true;
+            renderTable();
+        }
+
+        function saveNewSupplier() {
+            const gid = document.getElementById('new-gid').value.trim();
+            const gname = document.getElementById('new-gname').value.trim();
+            const supplier = document.getElementById('new-supplier').value.trim();
+            const address = document.getElementById('new-address').value.trim();
+            const contact = document.getElementById('new-contact').value.trim();
+            const msg = document.getElementById('msg');
+            if (!gid || !gname || !supplier || !address || !contact) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            let suppliers = getSuppliers();
+            suppliers.push({gid, gname, supplier, address, contact});
+            setSuppliers(suppliers);
+            addingNew = false;
+            msg.innerHTML = '<span class="success">添加成功！</span>';
+            renderTable();
+        }
+
+        function cancelAdd() {
+            addingNew = false;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function editSupplier(idx) {
+            if (addingNew) return;
+            editingIndex = idx;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function saveEdit(idx) {
+            const gid = document.getElementById('edit-gid').value.trim();
+            const gname = document.getElementById('edit-gname').value.trim();
+            const supplier = document.getElementById('edit-supplier').value.trim();
+            const address = document.getElementById('edit-address').value.trim();
+            const contact = document.getElementById('edit-contact').value.trim();
+            const msg = document.getElementById('msg');
+            if (!gid || !gname || !supplier || !address || !contact) {
+                msg.innerHTML = '<span class="error">请填写完整信息</span>';
+                return;
+            }
+            let suppliers = getSuppliers();
+            suppliers[idx] = {gid, gname, supplier, address, contact};
+            setSuppliers(suppliers);
+            editingIndex = null;
+            msg.innerHTML = '<span class="success">修改成功！</span>';
+            renderTable();
+        }
+
+        function cancelEdit() {
+            editingIndex = null;
+            document.getElementById('msg').innerHTML = '';
+            renderTable();
+        }
+
+        function deleteSupplier(idx) {
+            if (!confirm('确定要删除该供货商信息吗？')) return;
+            let suppliers = getSuppliers();
+            suppliers.splice(idx, 1);
+            setSuppliers(suppliers);
+            document.getElementById('msg').innerHTML = '<span class="success">删除成功！</span>';
+            renderTable();
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>

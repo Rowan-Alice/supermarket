@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>超市销售平台</title>
+    <style>
+        body {
+            font-family: "微软雅黑", Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+        .user-info {
+            position: absolute;
+            right: 40px;
+            top: 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #fff;
+        }
+        .user-info span {
+            font-size: 18px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .main-layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 700px;
+        }
+        .sidebar {
+            width: 200px;
+            background: #fff;
+            border-right: 1px solid #eee;
+            padding: 30px 0 0 0;
+            min-height: 700px;
+        }
+        .sidebar .category-btn {
+            display: block;
+            width: 160px;
+            margin: 0 auto 16px auto;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 12px 0;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .sidebar .category-btn.active, .sidebar .category-btn:hover {
+            background: #4caf50;
+            color: #fff;
+        }
+        .content {
+            flex: 1;
+            padding: 40px 40px 40px 40px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .search-bar input {
+            width: 300px;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .products {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .product {
+            background: #f1f1f1;
+            border-radius: 6px;
+            padding: 18px;
+            width: 220px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .product img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .product-name {
+            font-size: 18px;
+            margin: 10px 0 5px 0;
+        }
+        .product-price {
+            color: #e91e63;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .product-old-price {
+            color: #888;
+            text-decoration: line-through;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        .quantity-btn {
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 0 8px;
+            transition: background 0.2s;
+        }
+        .quantity-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .quantity-value {
+            min-width: 24px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .add-cart-btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .add-cart-btn:hover {
+            background: #1976d2;
+        }
+        .cart-fab {
+            position: fixed;
+            right: 40px;
+            bottom: 40px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            font-size: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            cursor: pointer;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-fab .cart-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e91e63;
+            color: #fff;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* 购物车弹窗 */
+        .cart-modal-bg {
+            display: none;
+            position: fixed;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-modal-bg.active {
+            display: flex;
+        }
+        .cart-modal {
+            background: #fff;
+            border-radius: 10px;
+            width: 420px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 28px 30px 20px 30px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            position: relative;
+        }
+        .cart-modal h3 {
+            margin: 0 0 18px 0;
+            color: #4caf50;
+        }
+        .cart-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .cart-total {
+            font-weight: bold;
+            color: #e91e63;
+            text-align: right;
+            margin-top: 8px;
+        }
+        .remove-btn {
+            background: #e57373;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .checkout-btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 0;
+            width: 100%;
+            font-size: 18px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        .close-btn {
+            position: absolute;
+            right: 18px;
+            top: 12px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #888;
+            cursor: pointer;
+        }
+        /* 支付页面 */
+        .pay-modal-bg {
+            display: none;
+            position: fixed;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 400;
+            align-items: center;
+            justify-content: center;
+        }
+        .pay-modal-bg.active {
+            display: flex;
+        }
+        .pay-modal {
+            background: #fff;
+            border-radius: 10px;
+            width: 350px;
+            padding: 36px 30px 30px 30px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            text-align: center;
+        }
+        .pay-modal h2 {
+            color: #4caf50;
+            margin-bottom: 18px;
+        }
+        .pay-modal .pay-amount {
+            font-size: 22px;
+            color: #e91e63;
+            margin-bottom: 24px;
+        }
+        .pay-modal .pay-btn {
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 0;
+            width: 100%;
+            font-size: 18px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .pay-modal .close-btn {
+            position: absolute;
+            right: 18px;
+            top: 12px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #888;
+            cursor: pointer;
+        }
+        footer {
+            text-align: center;
+            color: #888;
+            padding: 16px 0;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>超市销售平台</h1>
+    <div class="user-info" onclick="window.location.href='personal.html'">
+        <img src="https://img.icons8.com/color/96/000000/user-male-circle.png" alt="头像">
+        <span id="userNickname">小明</span>
+    </div>
+    <!-- 管理员入口按钮 -->
+    <button id="adminBtn" style="position:absolute;right:180px;top:22px;background:#2196f3;color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font-size:15px;" onclick="showAdminLogin()">管理员入口</button>
+    <!-- 管理员登录弹窗 -->
+    <div id="adminLoginModal" style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:999;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.18);text-align:center;">
+            <h3>管理员登录</h3>
+            <input id="adminPwd" type="password" placeholder="请输入管理员密码" style="padding:8px 12px;font-size:16px;border-radius:4px;border:1px solid #ccc;">
+            <br><br>
+            <button onclick="checkAdminPwd()" style="background:#4caf50;color:#fff;border:none;border-radius:4px;padding:8px 24px;font-size:16px;">登录</button>
+            <button onclick="hideAdminLogin()" style="margin-left:16px;background:#e57373;color:#fff;border:none;border-radius:4px;padding:8px 24px;font-size:16px;">取消</button>
+            <div id="adminLoginMsg" style="color:#e91e63;margin-top:10px;"></div>
+        </div>
+    </div>
+    <p>欢迎选购优质商品！</p>
+    <div class="main-layout">
+        <div class="sidebar" id="categories"></div>
+        <div class="content">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索商品名称...">
+            </div>
+            <div class="products" id="products"></div>
+        </div>
+    </div>
+    <!-- 购物车悬浮按钮 -->
+    <button class="cart-fab" id="cartFab" onclick="showCartModal()">
+        🛒
+        <span class="cart-count" id="cartCount">0</span>
+    </button>
+    <!-- 购物车弹窗 -->
+    <div class="cart-modal-bg" id="cartModalBg">
+        <div class="cart-modal">
+            <button class="close-btn" onclick="hideCartModal()">×</button>
+            <h3>购物车</h3>
+            <div class="cart-list" id="cartList"></div>
+            <div class="cart-total" id="cartTotal">总价：￥0.00</div>
+            <button class="checkout-btn" onclick="showPayModal()" id="checkoutBtn">结算</button>
+        </div>
+    </div>
+    <!-- 支付弹窗 -->
+    <div class="pay-modal-bg" id="payModalBg">
+        <div class="pay-modal">
+            <button class="close-btn" onclick="hidePayModal()">×</button>
+            <h2>支付页面</h2>
+            <div class="pay-amount" id="payAmount"></div>
+            <button class="pay-btn" onclick="paySuccess()">确认支付</button>
+        </div>
+    </div>
+    <footer>
+        &copy; 2025 超市销售平台 | 联系电话：123-4567-8901
+    </footer>
+    <script>
+        // 分类
+        const categories = [
+            "今日特价", "休闲零食", "酒水", "牛乳饮品", "美妆洗护", "纸品", "成人用品", "冰淇凌", "速冻食品"
+        ];
+
+        // 生成每类30个商品
+        const productImgs = [
+            "https://img.icons8.com/color/96/000000/apple.png",
+            "https://img.icons8.com/color/96/000000/broccoli.png",
+            "https://img.icons8.com/color/96/000000/carrot.png",
+            "https://img.icons8.com/color/96/000000/milk-bottle.png",
+            "https://img.icons8.com/color/96/000000/wine-bottle.png",
+            "https://img.icons8.com/color/96/000000/shampoo.png",
+            "https://img.icons8.com/color/96/000000/tissue.png",
+            "https://img.icons8.com/color/96/000000/ice-cream.png",
+            "https://img.icons8.com/color/96/000000/frozen-yogurt.png",
+            "https://img.icons8.com/color/96/000000/beer.png"
+        ];
+        let products = [];
+        categories.forEach((cat, cidx) => {
+            for(let i=1; i<=30; i++) {
+                if(cat === "今日特价") {
+                    // 原价和现价
+                    let oldPrice = (Math.random()*100+50).toFixed(2);
+                    let nowPrice = (oldPrice * (0.5 + Math.random()*0.4)).toFixed(2); // 现价低于原价
+                    products.push({
+                        name: `${cat}商品${i}`,
+                        price: parseFloat(nowPrice),
+                        oldPrice: parseFloat(oldPrice),
+                        category: cat,
+                        img: productImgs[(cidx+i)%productImgs.length]
+                    });
+                } else {
+                    products.push({
+                        name: `${cat}商品${i}`,
+                        price: (Math.random()*100+1).toFixed(2),
+                        category: cat,
+                        img: productImgs[(cidx+i)%productImgs.length]
+                    });
+                }
+            }
+        });
+
+        // 购物车
+        let cart = [];
+        let currentCategory = categories[0];
+        let currentSearch = "";
+        let productQuantities = {}; // 记录每个商品的需求数量
+
+        // 渲染分类按钮
+        function renderCategories() {
+            const catDiv = document.getElementById('categories');
+            catDiv.innerHTML = categories.map(cat =>
+                `<button class="category-btn${cat === currentCategory ? ' active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>`
+            ).join('');
+        }
+
+        // 渲染商品
+        function renderProducts() {
+            const prodDiv = document.getElementById('products');
+            let filtered = products.filter(p =>
+                p.category === currentCategory &&
+                p.name.includes(currentSearch)
+            );
+            if (filtered.length === 0) {
+                prodDiv.innerHTML = "<p>没有找到相关商品。</p>";
+                return;
+            }
+            prodDiv.innerHTML = filtered.map((p, idx) => {
+                let quantity = productQuantities[p.name] || 0;
+                let priceHtml = '';
+                if (p.category === "今日特价") {
+                    priceHtml = `<div class="product-old-price">原价：￥${p.oldPrice.toFixed(2)}</div>
+                                 <div class="product-price">现价：￥${p.price.toFixed(2)}</div>`;
+                } else {
+                    priceHtml = `<div class="product-price">￥${parseFloat(p.price).toFixed(2)}</div>`;
+                }
+                return `
+                <div class="product">
+                    <img src="${p.img}" alt="${p.name}">
+                    <div class="product-name">${p.name}</div>
+                    ${priceHtml}
+                    <div class="quantity-control">
+                        <button class="quantity-btn" onclick="changeQuantity('${p.name}', -1)" ${quantity <= 0 ? 'disabled' : ''}>-</button>
+                        <span class="quantity-value" id="qty-${p.name}">${quantity}</span>
+                        <button class="quantity-btn" onclick="changeQuantity('${p.name}', 1)">+</button>
+                    </div>
+                    <button class="add-cart-btn" onclick="addToCart('${p.name}')" ${quantity === 0 ? 'disabled' : ''}>加入购物车</button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // 选择分类
+        function selectCategory(cat) {
+            currentCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        // 搜索
+        document.getElementById('searchInput').addEventListener('input', function() {
+            currentSearch = this.value.trim();
+            renderProducts();
+        });
+
+        // 改变商品数量
+        function changeQuantity(name, delta) {
+            productQuantities[name] = (productQuantities[name] || 0) + delta;
+            if (productQuantities[name] < 0) productQuantities[name] = 0;
+            document.getElementById('qty-' + name).innerText = productQuantities[name];
+            renderProducts();
+        }
+
+        // 加入购物车
+        function addToCart(name) {
+            const prod = products.find(p => p.name === name);
+            const qty = productQuantities[name] || 0;
+            if (qty === 0) return;
+            const found = cart.find(item => item.name === prod.name);
+            if (found) {
+                found.count += qty;
+            } else {
+                cart.push({name: prod.name, price: parseFloat(prod.price), count: qty});
+            }
+            productQuantities[name] = 0;
+            updateCartCount();
+            renderProducts();
+        }
+
+        // 更新购物车数量
+        function updateCartCount() {
+            document.getElementById('cartCount').innerText = cart.reduce((sum, item) => sum + item.count, 0);
+        }
+
+        // 显示购物车弹窗
+        function showCartModal() {
+            renderCart();
+            document.getElementById('cartModalBg').classList.add('active');
+        }
+        // 隐藏购物车弹窗
+        function hideCartModal() {
+            document.getElementById('cartModalBg').classList.remove('active');
+        }
+
+        // 移除购物车商品
+        function removeFromCart(name) {
+            cart = cart.filter(item => item.name !== name);
+            updateCartCount();
+            renderCart();
+        }
+
+        // 渲染购物车
+        function renderCart() {
+            const cartList = document.getElementById('cartList');
+            if (cart.length === 0) {
+                cartList.innerHTML = "<div style='color:#888;'>购物车为空</div>";
+                document.getElementById('checkoutBtn').disabled = true;
+            } else {
+                cartList.innerHTML = cart.map(item =>
+                    `<div class="cart-item">
+                        <span>${item.name} x${item.count}</span>
+                        <span>￥${(item.price * item.count).toFixed(2)}</span>
+                        <button class="remove-btn" onclick="removeFromCart('${item.name}')">移除</button>
+                    </div>`
+                ).join('');
+                document.getElementById('checkoutBtn').disabled = false;
+            }
+            const total = cart.reduce((sum, item) => sum + item.price * item.count, 0);
+            document.getElementById('cartTotal').innerText = `总价：￥${total.toFixed(2)}`;
+        }
+
+        // 支付弹窗
+        function showPayModal() {
+            document.getElementById('payModalBg').classList.add('active');
+            const total = cart.reduce((sum, item) => sum + item.price * item.count, 0);
+            document.getElementById('payAmount').innerText = `应付金额：￥${total.toFixed(2)}`;
+        }
+        function hidePayModal() {
+            document.getElementById('payModalBg').classList.remove('active');
+        }
+        function paySuccess() {
+            alert("支付成功，感谢您的购买！");
+            cart = [];
+            updateCartCount();
+            hidePayModal();
+            hideCartModal();
+        }
+
+        // 初始化
+        renderCategories();
+        renderProducts();
+        updateCartCount();
+
+        // 让函数可全局调用
+        window.selectCategory = selectCategory;
+        window.addToCart = addToCart;
+        window.removeFromCart = removeFromCart;
+        window.showCartModal = showCartModal;
+        window.hideCartModal = hideCartModal;
+        window.showPayModal = showPayModal;
+        window.hidePayModal = hidePayModal;
+        window.paySuccess = paySuccess;
+        window.changeQuantity = changeQuantity;
+
+        function showAdminLogin() {
+            document.getElementById('adminLoginModal').style.display = 'flex';
+            document.getElementById('adminLoginMsg').innerText = '';
+            document.getElementById('adminPwd').value = '';
+        }
+        function hideAdminLogin() {
+            document.getElementById('adminLoginModal').style.display = 'none';
+        }
+        function checkAdminPwd() {
+            const pwd = document.getElementById('adminPwd').value;
+            if (pwd === 'admin123') { // 你可以自定义密码
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('adminLoginMsg').innerText = '密码错误！';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>查询库存</title>
+    <style>
+        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
+        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        h2 { color: #4caf50; margin-bottom: 30px; }
+        .search-bar { margin-bottom: 20px; }
+        .search-bar input { width: 350px; padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .table th, .table td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        .table th { background: #f1f1f1; }
+        .cover-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+        .add-btn { background: #4caf50; color: #fff; border: none; border-radius: 4px; padding: 10px 30px; font-size: 17px; cursor: pointer; margin: 20px auto 0 auto; display: block;}
+        .add-btn:hover { background: #388e3c; }
+        .modal-bg { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; }
+        .modal-bg.active { display: flex; }
+        .modal { background: #fff; border-radius: 10px; width: 400px; padding: 30px 30px 20px 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); text-align: center; }
+        .modal input { width: 80%; padding: 8px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
+        .modal label { display: block; text-align: left; margin-top: 10px; }
+        .modal .modal-btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; margin: 10px 8px 0 8px; cursor: pointer; }
+        .modal .modal-btn.cancel { background: #e57373; }
+        .modal .modal-btn:hover { opacity: 0.9; }
+        .success { color: #4caf50; }
+        .error { color: #e91e63; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>库存查询</h2>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="输入商品ID或名称搜索..." oninput="renderTable()">
+        </div>
+        <table class="table" id="stockTable">
+            <thead>
+                <tr>
+                    <th>商品ID/名称</th>
+                    <th>进货量</th>
+                    <th>进价</th>
+                    <th>批发商家</th>
+                    <th>更新日期</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 商品行 -->
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        // 只从 localStorage 读取库存数据
+        function getStock() {
+            return JSON.parse(localStorage.getItem('stock') || '[]');
+        }
+
+        function renderTable() {
+            const val = document.getElementById('searchInput').value.trim();
+            let data = getStock();
+            // 搜索功能
+            if (val) {
+                data = data.filter(item => (item.pid && item.pid.includes(val)) || (item.name && item.name.includes(val)));
+            }
+            // 按商品名称首字母排序
+            data.sort((a, b) => {
+                const nameA = (a.name || a.pid || '').toString();
+                const nameB = (b.name || b.pid || '').toString();
+                return nameA.localeCompare(nameB, 'zh-CN');
+            });
+            const tbody = document.getElementById('stockTable').querySelector('tbody');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">无匹配商品</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.pid || item.name || ''}</td>
+                    <td>${item.amount || 0}</td>
+                    <td>￥${item.price !== undefined ? parseFloat(item.price).toFixed(2) : ''}</td>
+                    <td>${item.supplier || ''}</td>
+                    <td>${item.date || ''}</td>
+                </tr>
+            `).join('');
+        }
+        renderTable();
+    </script>
+</body>
+</html>
