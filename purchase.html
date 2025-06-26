@@ -4,29 +4,128 @@
     <meta charset="UTF-8">
     <title>进货登记</title>
     <style>
-        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
-        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
-        h2 { color: #4caf50; margin-bottom: 30px; }
-        .form-row { margin-bottom: 18px; }
-        .form-row input { padding: 6px 10px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc; margin-right: 10px;}
-        .btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; cursor: pointer; }
-        .btn:hover { background: #1976d2; }
-        .btn-danger { background: #e57373; }
-        .btn-danger:hover { background: #c62828; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-        .table th, .table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .table th { background: #f1f1f1; }
-        .success { color: #4caf50; }
-        .error { color: #e91e63; }
-        .edit-input { width: 90%; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
-        .action-btns { display: flex; justify-content: center; gap: 8px; }
+        body {
+            font-family: "微软雅黑", Arial, sans-serif;
+            background: linear-gradient(120deg, #f8f9fa 0%, #e3f2fd 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 40px 30px 30px 30px;
+        }
+        h1, h2 {
+            color: #2196f3;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .search-bar {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .search-bar input {
+            width: 320px;
+            padding: 10px 14px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #bdbdbd;
+            transition: border 0.2s;
+        }
+        .search-bar input:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .add-btn, .btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 28px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+        }
+        .add-btn:hover, .btn:hover {
+            background: #1976d2;
+        }
+        .btn-danger {
+            background: #e57373;
+        }
+        .btn-danger:hover {
+            background: #c62828;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: #fafbfc;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.04);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 15px;
+        }
+        th {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f5f7fa;
+        }
+        tr:hover {
+            background: #e3f2fd;
+        }
+        input[type='text'], input[type='number'], input[type='date'], input[type='datetime-local'], select {
+            padding: 7px 10px;
+            border-radius: 5px;
+            border: 1px solid #bdbdbd;
+            font-size: 15px;
+            margin: 2px 0;
+            transition: border 0.2s;
+        }
+        input[type='text']:focus, input[type='number']:focus, input[type='date']:focus, input[type='datetime-local']:focus, select:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #e91e63;
+            font-weight: bold;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 10px 2vw; }
+            table, th, td { font-size: 13px; }
+            .search-bar input { width: 90vw; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>进货登记</h2>
         <div class="form-row">
-            <input id="pid" placeholder="商品ID/名称">
+            <input id="pid" placeholder="商品ID">
+            <input id="pname" placeholder="商品名称">
             <input id="amount" type="number" min="1" placeholder="进货量">
             <input id="price" type="number" min="0" step="0.01" placeholder="进价">
             <input id="supplier" placeholder="批发商家">
@@ -37,7 +136,8 @@
         <table class="table" id="purchaseTable">
             <thead>
                 <tr>
-                    <th>商品ID/名称</th>
+                    <th>商品ID</th>
+                    <th>商品名称</th>
                     <th>进货量</th>
                     <th>进价</th>
                     <th>批发商家</th>
@@ -49,6 +149,9 @@
                 <!-- 进货记录 -->
             </tbody>
         </table>
+    </div>
+    <div style="text-align:center;margin:40px 0 0 0;">
+        <button class="add-btn" onclick="window.location.href='admin.html'" style="min-width:160px;">← 返回后台</button>
     </div>
     <script>
         // 用localStorage保存进货记录和库存
@@ -69,18 +172,18 @@
 
         function addPurchase() {
             const pid = document.getElementById('pid').value.trim();
+            const pname = document.getElementById('pname').value.trim();
             const amount = parseInt(document.getElementById('amount').value, 10);
             const price = parseFloat(document.getElementById('price').value);
             const supplier = document.getElementById('supplier').value.trim();
             const date = document.getElementById('date').value;
             const msg = document.getElementById('msg');
-            if (!pid || !amount || !price || !supplier || !date) {
+            if (!pid || !pname || !amount || !price || !supplier || !date) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
-            // 添加进货记录
             let purchases = getPurchases();
-            purchases.push({pid, amount, price, supplier, date});
+            purchases.push({pid, name: pname, amount, price, supplier, date});
             setPurchases(purchases);
 
             // 同步到库存
@@ -91,8 +194,9 @@
                 item.price = price;
                 item.supplier = supplier;
                 item.date = date;
+                item.name = pname;
             } else {
-                stock.push({pid, amount, price, supplier, date});
+                stock.push({pid, name: pname, amount, price, supplier, date});
             }
             setStock(stock);
 
@@ -103,6 +207,7 @@
 
         function clearForm() {
             document.getElementById('pid').value = '';
+            document.getElementById('pname').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('price').value = '';
             document.getElementById('supplier').value = '';
@@ -112,8 +217,20 @@
         function deletePurchase(index) {
             if (!confirm('确定要删除该条进货记录吗？')) return;
             let purchases = getPurchases();
+            const del = purchases[index];
             purchases.splice(index, 1);
             setPurchases(purchases);
+
+            // 同步到库存（删除后减库存量，如果为0则移除）
+            let stock = getStock();
+            let itemIdx = stock.findIndex(item => item.pid === del.pid);
+            if (itemIdx !== -1) {
+                stock[itemIdx].amount -= del.amount;
+                if (stock[itemIdx].amount <= 0) {
+                    stock.splice(itemIdx, 1);
+                }
+                setStock(stock);
+            }
             renderTable();
         }
 
@@ -124,17 +241,18 @@
 
         function saveEdit(index) {
             const pid = document.getElementById('edit-pid').value.trim();
+            const pname = document.getElementById('edit-pname').value.trim();
             const amount = parseInt(document.getElementById('edit-amount').value, 10);
             const price = parseFloat(document.getElementById('edit-price').value);
             const supplier = document.getElementById('edit-supplier').value.trim();
             const date = document.getElementById('edit-date').value;
             const msg = document.getElementById('msg');
-            if (!pid || !amount || !price || !supplier || !date) {
+            if (!pid || !pname || !amount || !price || !supplier || !date) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
             let purchases = getPurchases();
-            purchases[index] = {pid, amount, price, supplier, date};
+            purchases[index] = {pid, name: pname, amount, price, supplier, date};
             setPurchases(purchases);
 
             // 同步到库存（只更新最后一次编辑的内容）
@@ -145,8 +263,9 @@
                 item.price = price;
                 item.supplier = supplier;
                 item.date = date;
+                item.name = pname;
             } else {
-                stock.push({pid, amount, price, supplier, date});
+                stock.push({pid, name: pname, amount, price, supplier, date});
             }
             setStock(stock);
 
@@ -165,7 +284,7 @@
             const purchases = getPurchases();
             const tbody = document.getElementById('purchaseTable').querySelector('tbody');
             if (purchases.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6">暂无进货记录</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">暂无进货记录</td></tr>';
                 return;
             }
             tbody.innerHTML = purchases.map((item, idx) => {
@@ -173,6 +292,7 @@
                     return `
                         <tr>
                             <td><input class="edit-input" id="edit-pid" value="${item.pid}"></td>
+                            <td><input class="edit-input" id="edit-pname" value="${item.name}"></td>
                             <td><input class="edit-input" id="edit-amount" type="number" value="${item.amount}"></td>
                             <td><input class="edit-input" id="edit-price" type="number" value="${item.price}"></td>
                             <td><input class="edit-input" id="edit-supplier" value="${item.supplier}"></td>
@@ -187,6 +307,7 @@
                     return `
                         <tr>
                             <td>${item.pid}</td>
+                            <td>${item.name}</td>
                             <td>${item.amount}</td>
                             <td>￥${parseFloat(item.price).toFixed(2)}</td>
                             <td>${item.supplier}</td>

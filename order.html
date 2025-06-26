@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>用户管理</title>
+    <title>订单管理</title>
     <style>
         body {
             font-family: "微软雅黑", Arial, sans-serif;
@@ -122,22 +122,26 @@
 </head>
 <body>
     <div class="container">
-        <h2>用户管理</h2>
-        <button class="add-btn" onclick="addUserRow()">添加用户</button>
-        <table class="user-table" id="userTable">
+        <h2>订单管理</h2>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="输入订单ID查询..." oninput="renderTable()">
+        </div>
+        <button class="add-btn" onclick="addOrderRow()">添加订单</button>
+        <table class="order-table" id="orderTable">
             <thead>
                 <tr>
-                    <th>用户ID</th>
-                    <th>昵称</th>
-                    <th>联系方式</th>
-                    <th>收货地址</th>
-                    <th>性别</th>
-                    <th>会员卡余额</th>
+                    <th>订单ID</th>
+                    <th>商品ID</th>
+                    <th>商品名称</th>
+                    <th>售价</th>
+                    <th>销售量</th>
+                    <th>时间</th>
+                    <th>顾客ID</th>
                     <th>操作</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- 用户行 -->
+                <!-- 订单行 -->
             </tbody>
         </table>
         <div id="msg"></div>
@@ -146,162 +150,148 @@
         <button class="add-btn" onclick="window.location.href='admin.html'" style="min-width:160px;">← 返回后台</button>
     </div>
     <script>
-        // 用localStorage保存用户数据
-        function getUsers() {
-            return JSON.parse(localStorage.getItem('users') || '[]');
+        function getOrders() {
+            return JSON.parse(localStorage.getItem('orders') || '[]');
         }
-        function setUsers(users) {
-            localStorage.setItem('users', JSON.stringify(users));
+        function setOrders(arr) {
+            localStorage.setItem('orders', JSON.stringify(arr));
         }
-
-        let editingId = null; // 当前正在编辑的用户ID
-        let addingNew = false; // 是否正在添加新用户
-
+        let editingIndex = null;
+        let addingNew = false;
         function renderTable() {
-            const users = getUsers();
-            const tbody = document.getElementById('userTable').querySelector('tbody');
-            if (users.length === 0 && !addingNew) {
-                tbody.innerHTML = '<tr><td colspan="7">暂无用户</td></tr>';
+            const orders = getOrders();
+            const val = document.getElementById('searchInput').value.trim();
+            let filtered = orders;
+            if (val) {
+                filtered = orders.filter(o => o.oid && o.oid.includes(val));
+            }
+            const tbody = document.getElementById('orderTable').querySelector('tbody');
+            if (filtered.length === 0 && !addingNew) {
+                tbody.innerHTML = '<tr><td colspan="8">暂无订单</td></tr>';
                 return;
             }
-            tbody.innerHTML = users.map(user => {
-                if (editingId === user.id) {
-                    // 编辑状态
+            tbody.innerHTML = filtered.map((item, idx) => {
+                if (editingIndex === idx) {
                     return `
                     <tr>
-                        <td>${user.id}</td>
-                        <td><input class="input-edit" id="edit-nickname" value="${user.nickname}"></td>
-                        <td><input class="input-edit" id="edit-contact" value="${user.contact}"></td>
-                        <td><input class="input-edit" id="edit-address" value="${user.address}"></td>
-                        <td>
-                            <select class="select-edit" id="edit-gender">
-                                <option value="男" ${user.gender === '男' ? 'selected' : ''}>男</option>
-                                <option value="女" ${user.gender === '女' ? 'selected' : ''}>女</option>
-                                <option value="保密" ${user.gender === '保密' ? 'selected' : ''}>保密</option>
-                            </select>
-                        </td>
-                        <td>￥${parseFloat(user.balance).toFixed(2)}</td>
+                        <td><input class="edit-input" id="edit-oid" value="${item.oid}"></td>
+                        <td><input class="edit-input" id="edit-gid" value="${item.gid}"></td>
+                        <td><input class="edit-input" id="edit-gname" value="${item.gname}"></td>
+                        <td><input class="edit-input" id="edit-price" type="number" value="${item.price}"></td>
+                        <td><input class="edit-input" id="edit-amount" type="number" value="${item.amount}"></td>
+                        <td><input class="edit-input" id="edit-date" type="datetime-local" value="${item.date}"></td>
+                        <td><input class="edit-input" id="edit-customer" value="${item.customer}"></td>
                         <td class="action-btns">
-                            <button class="btn" onclick="saveEdit('${user.id}')">保存</button>
+                            <button class="btn" onclick="saveEdit(${idx})">保存</button>
                             <button class="btn btn-danger" onclick="cancelEdit()">取消</button>
                         </td>
                     </tr>
                     `;
                 } else {
-                    // 普通显示状态
                     return `
                     <tr>
-                        <td>${user.id}</td>
-                        <td>${user.nickname}</td>
-                        <td>${user.contact}</td>
-                        <td>${user.address}</td>
-                        <td>${user.gender || '男'}</td>
-                        <td>￥${parseFloat(user.balance).toFixed(2)}</td>
+                        <td>${item.oid}</td>
+                        <td>${item.gid}</td>
+                        <td>${item.gname}</td>
+                        <td>￥${parseFloat(item.price).toFixed(2)}</td>
+                        <td>${item.amount}</td>
+                        <td>${item.date}</td>
+                        <td>${item.customer}</td>
                         <td class="action-btns">
-                            <button class="btn" onclick="editUser('${user.id}')">编辑</button>
-                            <button class="btn btn-danger" onclick="deleteUser('${user.id}')">删除</button>
+                            <button class="btn" onclick="editOrder(${idx})">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteOrder(${idx})">删除</button>
                         </td>
                     </tr>
                     `;
                 }
-            }).join('') + (addingNew ? newUserRow() : '');
+            }).join('') + (addingNew ? newOrderRow() : '');
         }
-
-        function newUserRow() {
+        function newOrderRow() {
             return `
             <tr>
-                <td>自动生成</td>
-                <td><input class="input-edit" id="new-nickname" placeholder="昵称"></td>
-                <td><input class="input-edit" id="new-contact" placeholder="联系方式"></td>
-                <td><input class="input-edit" id="new-address" placeholder="收货地址"></td>
-                <td>
-                    <select class="select-edit" id="new-gender">
-                        <option value="男">男</option>
-                        <option value="女">女</option>
-                        <option value="保密">保密</option>
-                    </select>
-                </td>
-                <td><input class="input-edit" id="new-balance" type="number" placeholder="会员卡余额"></td>
+                <td><input class="edit-input" id="new-oid" placeholder="订单ID"></td>
+                <td><input class="edit-input" id="new-gid" placeholder="商品ID"></td>
+                <td><input class="edit-input" id="new-gname" placeholder="商品名称"></td>
+                <td><input class="edit-input" id="new-price" type="number" placeholder="售价"></td>
+                <td><input class="edit-input" id="new-amount" type="number" placeholder="销售量"></td>
+                <td><input class="edit-input" id="new-date" type="datetime-local" placeholder="时间"></td>
+                <td><input class="edit-input" id="new-customer" placeholder="顾客ID"></td>
                 <td class="action-btns">
-                    <button class="btn" onclick="saveNewUser()">保存</button>
+                    <button class="btn" onclick="saveNewOrder()">保存</button>
                     <button class="btn btn-danger" onclick="cancelAdd()">取消</button>
                 </td>
             </tr>
             `;
         }
-
-        function addUserRow() {
+        function addOrderRow() {
             if (addingNew) return;
             addingNew = true;
             renderTable();
         }
-
-        function saveNewUser() {
-            const nickname = document.getElementById('new-nickname').value.trim();
-            const contact = document.getElementById('new-contact').value.trim();
-            const address = document.getElementById('new-address').value.trim();
-            const gender = document.getElementById('new-gender').value;
-            const balance = document.getElementById('new-balance').value.trim();
+        function saveNewOrder() {
+            const oid = document.getElementById('new-oid').value.trim();
+            const gid = document.getElementById('new-gid').value.trim();
+            const gname = document.getElementById('new-gname').value.trim();
+            const price = parseFloat(document.getElementById('new-price').value);
+            const amount = parseInt(document.getElementById('new-amount').value, 10);
+            const date = document.getElementById('new-date').value;
+            const customer = document.getElementById('new-customer').value.trim();
             const msg = document.getElementById('msg');
-            if (!nickname || !contact || !address || !balance) {
+            if (!oid || !gid || !gname || !price || !amount || !date || !customer) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
-            let users = getUsers();
-            const id = 'U' + Date.now();
-            users.push({id, nickname, contact, address, balance, gender});
-            setUsers(users);
+            let orders = getOrders();
+            orders.push({oid, gid, gname, price, amount, date, customer});
+            setOrders(orders);
             addingNew = false;
             msg.innerHTML = '<span class="success">添加成功！</span>';
             renderTable();
         }
-
         function cancelAdd() {
             addingNew = false;
             document.getElementById('msg').innerHTML = '';
             renderTable();
         }
-
-        function editUser(id) {
+        function editOrder(idx) {
             if (addingNew) return;
-            editingId = id;
+            editingIndex = idx;
             document.getElementById('msg').innerHTML = '';
             renderTable();
         }
-
-        function saveEdit(id) {
-            const nickname = document.getElementById('edit-nickname').value.trim();
-            const contact = document.getElementById('edit-contact').value.trim();
-            const address = document.getElementById('edit-address').value.trim();
-            const gender = document.getElementById('edit-gender').value;
+        function saveEdit(idx) {
+            const oid = document.getElementById('edit-oid').value.trim();
+            const gid = document.getElementById('edit-gid').value.trim();
+            const gname = document.getElementById('edit-gname').value.trim();
+            const price = parseFloat(document.getElementById('edit-price').value);
+            const amount = parseInt(document.getElementById('edit-amount').value, 10);
+            const date = document.getElementById('edit-date').value;
+            const customer = document.getElementById('edit-customer').value.trim();
             const msg = document.getElementById('msg');
-            if (!nickname || !contact || !address) {
+            if (!oid || !gid || !gname || !price || !amount || !date || !customer) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
-            let users = getUsers();
-            users = users.map(u => u.id === id ? {...u, nickname, contact, address, gender} : u);
-            setUsers(users);
-            editingId = null;
+            let orders = getOrders();
+            orders[idx] = {oid, gid, gname, price, amount, date, customer};
+            setOrders(orders);
+            editingIndex = null;
             msg.innerHTML = '<span class="success">修改成功！</span>';
             renderTable();
         }
-
         function cancelEdit() {
-            editingId = null;
+            editingIndex = null;
             document.getElementById('msg').innerHTML = '';
             renderTable();
         }
-
-        function deleteUser(id) {
-            if (!confirm('确定要删除该用户吗？')) return;
-            let users = getUsers();
-            users = users.filter(u => u.id !== id);
-            setUsers(users);
+        function deleteOrder(idx) {
+            if (!confirm('确定要删除该订单吗？')) return;
+            let orders = getOrders();
+            orders.splice(idx, 1);
+            setOrders(orders);
             document.getElementById('msg').innerHTML = '<span class="success">删除成功！</span>';
             renderTable();
         }
-
         renderTable();
     </script>
 </body>

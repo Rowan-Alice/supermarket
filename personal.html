@@ -4,10 +4,121 @@
     <meta charset="UTF-8">
     <title>个人信息</title>
     <style>
-        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
-        .container { max-width: 500px; margin: 60px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
+        body {
+            font-family: "微软雅黑", Arial, sans-serif;
+            background: linear-gradient(120deg, #f8f9fa 0%, #e3f2fd 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 40px 30px 30px 30px;
+        }
+        h1, h2 {
+            color: #2196f3;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .search-bar {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .search-bar input {
+            width: 320px;
+            padding: 10px 14px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #bdbdbd;
+            transition: border 0.2s;
+        }
+        .search-bar input:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .add-btn, .btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 28px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+        }
+        .add-btn:hover, .btn:hover {
+            background: #1976d2;
+        }
+        .btn-danger {
+            background: #e57373;
+        }
+        .btn-danger:hover {
+            background: #c62828;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: #fafbfc;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.04);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 15px;
+        }
+        th {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f5f7fa;
+        }
+        tr:hover {
+            background: #e3f2fd;
+        }
+        input[type='text'], input[type='number'], input[type='date'], input[type='datetime-local'], select {
+            padding: 7px 10px;
+            border-radius: 5px;
+            border: 1px solid #bdbdbd;
+            font-size: 15px;
+            margin: 2px 0;
+            transition: border 0.2s;
+        }
+        input[type='text']:focus, input[type='number']:focus, input[type='date']:focus, input[type='datetime-local']:focus, select:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #e91e63;
+            font-weight: bold;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 10px 2vw; }
+            table, th, td { font-size: 13px; }
+            .search-bar input { width: 90vw; }
+        }
         img.avatar { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; }
-        h2 { color: #4caf50; margin-bottom: 30px; }
         .info-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
         .info-label { font-size: 17px; color: #333; }
         .info-value { font-size: 17px; color: #555; margin-right: 10px; }
@@ -50,6 +161,19 @@
             </span>
         </div>
         <div class="info-row">
+            <span class="info-label">性别</span>
+            <span>
+                <span class="info-value" id="gender">男</span>
+                <button class="edit-btn" onclick="editField('gender')">修改</button>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">顾客ID</span>
+            <span>
+                <span class="info-value" id="customerId">C10001</span>
+            </span>
+        </div>
+        <div class="info-row">
             <span class="info-label">订单记录</span>
             <span>
                 <button class="order-btn" onclick="toggleOrders()">查看</button>
@@ -83,12 +207,21 @@
         function editField(field) {
             const valueSpan = document.getElementById(field);
             const oldValue = valueSpan.innerText;
-            valueSpan.innerHTML = `<input class="input-inline" id="input-${field}" value="${oldValue}"> <button class="edit-btn" onclick="saveField('${field}')">保存</button>`;
-            document.getElementById(`input-${field}`).focus();
+            if(field === 'gender') {
+                valueSpan.innerHTML = `<select id="input-gender"><option value="男">男</option><option value="女">女</option><option value="保密">保密</option></select> <button class="edit-btn" onclick="saveField('gender')">保存</button>`;
+                document.getElementById('input-gender').value = oldValue;
+            } else {
+                valueSpan.innerHTML = `<input class="input-inline" id="input-${field}" value="${oldValue}"> <button class="edit-btn" onclick="saveField('${field}')">保存</button>`;
+                document.getElementById(`input-${field}`).focus();
+            }
         }
         function saveField(field) {
-            const input = document.getElementById(`input-${field}`);
-            let newValue = input.value.trim();
+            let newValue;
+            if(field === 'gender') {
+                newValue = document.getElementById('input-gender').value;
+            } else {
+                newValue = document.getElementById(`input-${field}`).value.trim();
+            }
             if (!newValue) {
                 alert("内容不能为空！");
                 return;

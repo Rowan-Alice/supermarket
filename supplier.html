@@ -29,8 +29,7 @@
         <table class="supplier-table" id="supplierTable">
             <thead>
                 <tr>
-                    <th>商品ID</th>
-                    <th>商品名称</th>
+                    <th>供应商ID</th>
                     <th>供货商</th>
                     <th>供货商地址</th>
                     <th>供货商联系方式</th>
@@ -42,6 +41,9 @@
             </tbody>
         </table>
         <div id="msg"></div>
+    </div>
+    <div style="text-align:center;margin:40px 0 0 0;">
+        <button class="add-btn" onclick="window.location.href='admin.html'" style="min-width:160px;">← 返回后台</button>
     </div>
     <script>
         function getSuppliers() {
@@ -58,15 +60,14 @@
             const suppliers = getSuppliers();
             const tbody = document.getElementById('supplierTable').querySelector('tbody');
             if (suppliers.length === 0 && !addingNew) {
-                tbody.innerHTML = '<tr><td colspan="6">暂无供货商信息</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5">暂无供货商信息</td></tr>';
                 return;
             }
             tbody.innerHTML = suppliers.map((item, idx) => {
                 if (editingIndex === idx) {
                     return `
                     <tr>
-                        <td><input class="edit-input" id="edit-gid" value="${item.gid}"></td>
-                        <td><input class="edit-input" id="edit-gname" value="${item.gname}"></td>
+                        <td><input class="edit-input" id="edit-sid" value="${item.sid}"></td>
                         <td><input class="edit-input" id="edit-supplier" value="${item.supplier}"></td>
                         <td><input class="edit-input" id="edit-address" value="${item.address}"></td>
                         <td><input class="edit-input" id="edit-contact" value="${item.contact}"></td>
@@ -79,8 +80,7 @@
                 } else {
                     return `
                     <tr>
-                        <td>${item.gid}</td>
-                        <td>${item.gname}</td>
+                        <td>${item.sid}</td>
                         <td>${item.supplier}</td>
                         <td>${item.address}</td>
                         <td>${item.contact}</td>
@@ -97,8 +97,7 @@
         function newSupplierRow() {
             return `
             <tr>
-                <td><input class="edit-input" id="new-gid" placeholder="商品ID"></td>
-                <td><input class="edit-input" id="new-gname" placeholder="商品名称"></td>
+                <td><input class="edit-input" id="new-sid" placeholder="供应商ID"></td>
                 <td><input class="edit-input" id="new-supplier" placeholder="供货商"></td>
                 <td><input class="edit-input" id="new-address" placeholder="供货商地址"></td>
                 <td><input class="edit-input" id="new-contact" placeholder="供货商联系方式"></td>
@@ -117,18 +116,17 @@
         }
 
         function saveNewSupplier() {
-            const gid = document.getElementById('new-gid').value.trim();
-            const gname = document.getElementById('new-gname').value.trim();
+            const sid = document.getElementById('new-sid').value.trim();
             const supplier = document.getElementById('new-supplier').value.trim();
             const address = document.getElementById('new-address').value.trim();
             const contact = document.getElementById('new-contact').value.trim();
             const msg = document.getElementById('msg');
-            if (!gid || !gname || !supplier || !address || !contact) {
+            if (!sid || !supplier || !address || !contact) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
             let suppliers = getSuppliers();
-            suppliers.push({gid, gname, supplier, address, contact});
+            suppliers.push({sid, supplier, address, contact});
             setSuppliers(suppliers);
             addingNew = false;
             msg.innerHTML = '<span class="success">添加成功！</span>';
@@ -149,18 +147,17 @@
         }
 
         function saveEdit(idx) {
-            const gid = document.getElementById('edit-gid').value.trim();
-            const gname = document.getElementById('edit-gname').value.trim();
+            const sid = document.getElementById('edit-sid').value.trim();
             const supplier = document.getElementById('edit-supplier').value.trim();
             const address = document.getElementById('edit-address').value.trim();
             const contact = document.getElementById('edit-contact').value.trim();
             const msg = document.getElementById('msg');
-            if (!gid || !gname || !supplier || !address || !contact) {
+            if (!sid || !supplier || !address || !contact) {
                 msg.innerHTML = '<span class="error">请填写完整信息</span>';
                 return;
             }
             let suppliers = getSuppliers();
-            suppliers[idx] = {gid, gname, supplier, address, contact};
+            suppliers[idx] = {sid, supplier, address, contact};
             setSuppliers(suppliers);
             editingIndex = null;
             msg.innerHTML = '<span class="success">修改成功！</span>';
@@ -186,3 +183,4 @@
     </script>
 </body>
 </html>
+

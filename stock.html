@@ -4,27 +4,120 @@
     <meta charset="UTF-8">
     <title>查询库存</title>
     <style>
-        body { font-family: "微软雅黑", Arial, sans-serif; background: #f8f9fa; margin: 0; }
-        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 40px 30px 30px 30px; }
-        h2 { color: #4caf50; margin-bottom: 30px; }
-        .search-bar { margin-bottom: 20px; }
-        .search-bar input { width: 350px; padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .table th, .table td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        .table th { background: #f1f1f1; }
-        .cover-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
-        .add-btn { background: #4caf50; color: #fff; border: none; border-radius: 4px; padding: 10px 30px; font-size: 17px; cursor: pointer; margin: 20px auto 0 auto; display: block;}
-        .add-btn:hover { background: #388e3c; }
-        .modal-bg { display: none; position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; }
-        .modal-bg.active { display: flex; }
-        .modal { background: #fff; border-radius: 10px; width: 400px; padding: 30px 30px 20px 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); text-align: center; }
-        .modal input { width: 80%; padding: 8px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; font-size: 15px; }
-        .modal label { display: block; text-align: left; margin-top: 10px; }
-        .modal .modal-btn { background: #2196f3; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-size: 16px; margin: 10px 8px 0 8px; cursor: pointer; }
-        .modal .modal-btn.cancel { background: #e57373; }
-        .modal .modal-btn:hover { opacity: 0.9; }
-        .success { color: #4caf50; }
-        .error { color: #e91e63; }
+        body {
+            font-family: "微软雅黑", Arial, sans-serif;
+            background: linear-gradient(120deg, #f8f9fa 0%, #e3f2fd 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 40px 30px 30px 30px;
+        }
+        h1, h2 {
+            color: #2196f3;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .search-bar {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .search-bar input {
+            width: 320px;
+            padding: 10px 14px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #bdbdbd;
+            transition: border 0.2s;
+        }
+        .search-bar input:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .add-btn, .btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 28px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+        }
+        .add-btn:hover, .btn:hover {
+            background: #1976d2;
+        }
+        .btn-danger {
+            background: #e57373;
+        }
+        .btn-danger:hover {
+            background: #c62828;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: #fafbfc;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.04);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 15px;
+        }
+        th {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f5f7fa;
+        }
+        tr:hover {
+            background: #e3f2fd;
+        }
+        input[type='text'], input[type='number'], input[type='date'], input[type='datetime-local'], select {
+            padding: 7px 10px;
+            border-radius: 5px;
+            border: 1px solid #bdbdbd;
+            font-size: 15px;
+            margin: 2px 0;
+            transition: border 0.2s;
+        }
+        input[type='text']:focus, input[type='number']:focus, input[type='date']:focus, input[type='datetime-local']:focus, select:focus {
+            border: 1.5px solid #2196f3;
+            outline: none;
+        }
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #e91e63;
+            font-weight: bold;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 10px 2vw; }
+            table, th, td { font-size: 13px; }
+            .search-bar input { width: 90vw; }
+        }
     </style>
 </head>
 <body>
@@ -36,9 +129,11 @@
         <table class="table" id="stockTable">
             <thead>
                 <tr>
-                    <th>商品ID/名称</th>
-                    <th>进货量</th>
-                    <th>进价</th>
+                    <th>商品ID</th>
+                    <th>商品名称</th>
+                    <th>库存量</th>
+                    <th>原价</th>
+                    <th>折扣价</th>
                     <th>批发商家</th>
                     <th>更新日期</th>
                 </tr>
@@ -47,6 +142,10 @@
                 <!-- 商品行 -->
             </tbody>
         </table>
+    </div>
+    
+    <div style="text-align:center;margin:40px 0 0 0;">
+        <button class="add-btn" onclick="window.location.href='admin.html'" style="min-width:160px;">← 返回后台</button>
     </div>
     
     <script>
@@ -58,26 +157,26 @@
         function renderTable() {
             const val = document.getElementById('searchInput').value.trim();
             let data = getStock();
-            // 搜索功能
             if (val) {
                 data = data.filter(item => (item.pid && item.pid.includes(val)) || (item.name && item.name.includes(val)));
             }
-            // 按商品名称首字母排序
             data.sort((a, b) => {
-                const nameA = (a.name || a.pid || '').toString();
-                const nameB = (b.name || b.pid || '').toString();
+                const nameA = (a.name || '').toString();
+                const nameB = (b.name || '').toString();
                 return nameA.localeCompare(nameB, 'zh-CN');
             });
             const tbody = document.getElementById('stockTable').querySelector('tbody');
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">无匹配商品</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">无匹配商品</td></tr>';
                 return;
             }
             tbody.innerHTML = data.map(item => `
                 <tr>
-                    <td>${item.pid || item.name || ''}</td>
+                    <td>${item.pid || ''}</td>
+                    <td>${item.name || ''}</td>
                     <td>${item.amount || 0}</td>
-                    <td>￥${item.price !== undefined ? parseFloat(item.price).toFixed(2) : ''}</td>
+                    <td>￥${item.originalPrice !== undefined ? parseFloat(item.originalPrice).toFixed(2) : ''}</td>
+                    <td>￥${item.discountPrice !== undefined ? parseFloat(item.discountPrice).toFixed(2) : ''}</td>
                     <td>${item.supplier || ''}</td>
                     <td>${item.date || ''}</td>
                 </tr>
