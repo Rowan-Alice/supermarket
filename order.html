@@ -125,6 +125,9 @@
         <h2>订单管理</h2>
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="输入订单ID查询..." oninput="renderTable()">
+            <input type="date" id="dateStart" style="margin-left:16px;" onchange="renderTable()">
+            <span style="margin:0 8px;">至</span>
+            <input type="date" id="dateEnd" onchange="renderTable()">
         </div>
         <button class="add-btn" onclick="addOrderRow()">添加订单</button>
         <table class="order-table" id="orderTable">
@@ -161,9 +164,17 @@
         function renderTable() {
             const orders = getOrders();
             const val = document.getElementById('searchInput').value.trim();
+            const dateStart = document.getElementById('dateStart').value;
+            const dateEnd = document.getElementById('dateEnd').value;
             let filtered = orders;
             if (val) {
-                filtered = orders.filter(o => o.oid && o.oid.includes(val));
+                filtered = filtered.filter(o => o.oid && o.oid.includes(val));
+            }
+            if (dateStart) {
+                filtered = filtered.filter(o => o.date && o.date.substr(0,10) >= dateStart);
+            }
+            if (dateEnd) {
+                filtered = filtered.filter(o => o.date && o.date.substr(0,10) <= dateEnd);
             }
             const tbody = document.getElementById('orderTable').querySelector('tbody');
             if (filtered.length === 0 && !addingNew) {
